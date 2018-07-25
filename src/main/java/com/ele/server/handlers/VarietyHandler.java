@@ -4,9 +4,9 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-public class ShopHandler extends ApiHandler{
+public class VarietyHandler extends ApiHandler {
 
-    public ShopHandler(Vertx vertx) {
+    public VarietyHandler(Vertx vertx) {
         super(vertx);
     }
 
@@ -14,12 +14,12 @@ public class ShopHandler extends ApiHandler{
     public Router createSubRouter() {
         Router subRouter = Router.router(vertx);
 
-        subRouter.get("/").handler(this::handleGetShop);
+        subRouter.get("/").handler(this::handleGetVariety);
 
         return subRouter;
     }
 
-    private void handleGetShop(RoutingContext context) {
-        error(context, "shop");
+    private void handleGetVariety(RoutingContext context) {
+        ok(context, "variety");
     }
 }
