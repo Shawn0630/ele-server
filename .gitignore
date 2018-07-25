@@ -17,3 +17,5 @@ buildNumber.properties
 
 ### MAC OS GENERAL
 *.DS_Store
+*.AppleDouble
+*.LSOverride
