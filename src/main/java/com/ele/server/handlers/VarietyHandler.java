@@ -1,13 +1,14 @@
 package com.ele.server.handlers;
 
+import akka.actor.ActorSystem;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 public class VarietyHandler extends ApiHandler {
 
-    public VarietyHandler(Vertx vertx) {
-        super(vertx);
+    public VarietyHandler(Vertx vertx, ActorSystem system) {
+        super(vertx, system);
     }
 
     @Override

@@ -1,9 +1,26 @@
 package com.ele.server.handlers;
 
+import akka.Done;
+import akka.NotUsed;
+import akka.actor.Actor;
+import akka.actor.ActorSystem;
+import akka.japi.function.Procedure;
+import akka.japi.function.Procedure2;
+import akka.stream.ActorMaterializer;
+import akka.stream.Materializer;
+import akka.stream.OverflowStrategy;
+import akka.stream.javadsl.Flow;
+import akka.stream.javadsl.Keep;
+import akka.stream.javadsl.Sink;
+import akka.stream.javadsl.Source;
+import com.ele.server.handlers.helpers.VertxChunkedOutputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import com.sun.istack.internal.NotNull;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpConnection;
@@ -14,6 +31,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.Objects;
 import java.util.UUID;
@@ -23,6 +43,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 
 public abstract class ApiHandler {
@@ -31,9 +52,11 @@ public abstract class ApiHandler {
             .registerModule(new Jdk8Module());
     private static final Logger LOG = LoggerFactory.getLogger(ApiHandler.class);
     protected final Vertx vertx;
+    protected final ActorSystem system;
 
-    public ApiHandler(Vertx vertx) {
+    public ApiHandler(Vertx vertx, ActorSystem system) {
         this.vertx = vertx;
+        this.system = system;
     }
 
     public static void failChunkedResponse(HttpServerResponse response) {
@@ -58,7 +81,7 @@ public abstract class ApiHandler {
             if (predicate.test(data)) {
                 return futureError(errorCode, message);
             } else {
-                return CompletableFuture.completedFuture(data);
+                return completedFuture(data);
             }
         };
     }
@@ -91,7 +114,9 @@ public abstract class ApiHandler {
             try {
                 if (obj instanceof String) {
                     json = (String) obj;
-                } else {
+                } else if (obj instanceof GeneratedMessageV3) {
+                    json = toJson((GeneratedMessageV3) obj);
+                }  else {
                     json = OM.writeValueAsString(obj);
                 }
             } catch (JsonProcessingException e) {
@@ -103,6 +128,14 @@ public abstract class ApiHandler {
                     .putHeader("content-type", "application/json; charset=utf-8")
                     .end(json);
         }
+    }
+
+    protected final <T extends GeneratedMessageV3> CompletionStage<Done> serializationProcedure(
+            RoutingContext context,
+            Source<T, NotUsed> source
+    ) {
+        final Materializer materializer = ActorMaterializer.create(system);
+        return source.runWith(toSink("", context.response()), materializer);
     }
 
     /**
@@ -146,6 +179,87 @@ public abstract class ApiHandler {
         } catch (IllegalArgumentException e) {
             badRequest(context, "Unable to parse id for " + param);
         }
+    }
+
+    private final <T extends GeneratedMessageV3> String toJson(T obj) {
+        final JsonFormat.Printer printer = JsonFormat.printer().omittingInsignificantWhitespace();
+        try {
+            return printer.print(obj);
+        } catch (InvalidProtocolBufferException e) {
+            LOG.error("Error converting to JSON", e);
+            return "\"Error converting to JSON. See server log.\"";
+        }
+    }
+
+    private final <T extends GeneratedMessageV3> Sink<T, CompletionStage<Done>> toSink(
+            String name,
+            HttpServerResponse response
+    ) {
+        return Flow.<T>create()
+                .async()
+                .map(x -> {
+                    return toJson(x);
+                })
+                .buffer(256, OverflowStrategy.backpressure())
+                .intersperse("[", ",", "]")
+                .toMat(responseSink(
+                        response,
+                        r -> {
+                            r.putHeader("Content-Disposition", "attachment; filename=\"" + name + ".json\"");
+                        }, null,
+                        (output, value) -> output.write(value.getBytes())
+                ), Keep.right());
+    }
+
+    private static <T> Sink<T, CompletionStage<Done>> responseSink(
+            HttpServerResponse response,
+            Procedure<HttpServerResponse> setHeaders,
+            Procedure<OutputStream> writeFirst,
+            Procedure2<OutputStream, T> write
+    ) {
+        return Sink.<T, CompletionStage<Done>>lazyInit(
+                first -> {
+                    setHeaders.apply(response);
+                    response.setChunked(true);
+                    final OutputStream output = new BufferedOutputStream(new VertxChunkedOutputStream(response));
+                    if (writeFirst != null) {
+                        writeFirst.apply(output);
+                    }
+
+                    return completedFuture(Sink.<T>foreach(value -> {
+                        if (response.closed()) {
+                            throw new IOException("Response closed permaturely");
+                        }
+                        write.apply(output, value);
+                    }).mapMaterializedValue(futureDone -> futureDone.whenComplete((done, throwable) -> {
+                        try {
+                            output.flush();
+                            output.close();
+                        } catch (IOException e) {
+                            LOG.error("Exception during close of output stream", e);
+                        }
+                        response.end();
+                    })));
+                },
+                () -> {
+                    if (writeFirst != null) {
+                        setHeaders.apply(response);
+                        response.setChunked(true);
+                        final OutputStream output = new BufferedOutputStream(new VertxChunkedOutputStream(response));
+                        writeFirst.apply(output);
+                        try {
+                            output.flush();
+                            output.close();
+                        } catch (IOException e) {
+                            LOG.error("Exception during close of output stream", e);
+                        }
+                        response.end();
+                    } else {
+                        response.setStatusCode(204).end();
+                    }
+                    return completedFuture(Done.getInstance());
+                }
+        ).mapMaterializedValue(futureDone -> futureDone.thenCompose(x -> x));
     }
 }
 

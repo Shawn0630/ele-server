@@ -1,5 +1,6 @@
 package com.ele.server;
 
+import akka.actor.ActorSystem;
 import com.ele.server.handlers.HandlerException;
 import com.ele.server.handlers.ShopHandler;
 import com.ele.server.handlers.VarietyHandler;
@@ -31,6 +32,7 @@ public class ServerVerticle extends AbstractVerticle{
     @Override
     public void start(final Future<Void> started) {
         Router router = Router.router(vertx);
+        ActorSystem system = ActorSystem.apply("main");
 
         String root = "/apis";
 
@@ -45,8 +47,8 @@ public class ServerVerticle extends AbstractVerticle{
             context.next();
         });
 
-        router.mountSubRouter(root + "/shop", new ShopHandler(vertx).createSubRouter());
-        router.mountSubRouter(root + "/variety", new VarietyHandler(vertx).createSubRouter());
+        router.mountSubRouter(root + "/shop", new ShopHandler(vertx, system).createSubRouter());
+        router.mountSubRouter(root + "/variety", new VarietyHandler(vertx, system).createSubRouter());
 
         failureHandler(router.route(root + "/*"));
 
