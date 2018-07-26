@@ -135,7 +135,7 @@ public abstract class ApiHandler {
             Source<T, NotUsed> source
     ) {
         final Materializer materializer = ActorMaterializer.create(system);
-        return source.runWith(toSink("", context.response()), materializer);
+        return source.runWith(toProtoSink("", context.response()), materializer);
     }
 
     /**
@@ -191,7 +191,7 @@ public abstract class ApiHandler {
         }
     }
 
-    private final <T extends GeneratedMessageV3> Sink<T, CompletionStage<Done>> toSink(
+    private final <T extends GeneratedMessageV3> Sink<T, CompletionStage<Done>> toJsonSink(
             String name,
             HttpServerResponse response
     ) {
@@ -208,6 +208,23 @@ public abstract class ApiHandler {
                             r.putHeader("Content-Disposition", "attachment; filename=\"" + name + ".json\"");
                         }, null,
                         (output, value) -> output.write(value.getBytes())
+                ), Keep.right());
+    }
+
+    private final <T extends GeneratedMessageV3> Sink<T, CompletionStage<Done>> toProtoSink(
+            String name,
+            HttpServerResponse response
+    ) {
+        return Flow.<T>create()
+                .async()
+                .buffer(256, OverflowStrategy.backpressure())
+                .toMat(responseSink(
+                        response,
+                        r -> {
+                            r.putHeader("Content-Disposition", "attachment; filename=\"" + name + ".protobuf\"");
+                            r.putHeader("Content-Type", "application/x-protobuf");
+                        }, null,
+                        (output, proto) -> proto.writeDelimitedTo(output)
                 ), Keep.right());
     }
 
