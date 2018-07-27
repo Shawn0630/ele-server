@@ -6,19 +6,21 @@ import com.ele.server.handlers.ShopHandler;
 import com.ele.server.handlers.VarietyHandler;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.oracle.tools.packager.Log;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ServerVerticle extends AbstractVerticle{
 
@@ -32,6 +34,7 @@ public class ServerVerticle extends AbstractVerticle{
     @Override
     public void start(final Future<Void> started) {
         Router router = Router.router(vertx);
+        boolean allowCors = true;
         ActorSystem system = ActorSystem.apply("main");
 
         String root = "/apis";
@@ -39,6 +42,22 @@ public class ServerVerticle extends AbstractVerticle{
 
 
         router.route().handler(BodyHandler.create());
+
+        if (allowCors) {
+            Set<HttpMethod> allowedMethods = new HashSet<>(Arrays.asList(
+                    HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE
+            ));
+
+            Set<String> allowedHeaders = new HashSet<>(Arrays.asList(
+                    "accept", "authorization", "content-type"
+            ));
+
+            router.route(root + "/*").handler(CorsHandler.create(".*")
+                .allowedHeaders(allowedHeaders)
+                .allowedMethods(allowedMethods)
+                .allowCredentials(true)
+            );
+        }
 
         router.route(root + "/*").handler(context -> {
             context.response().putHeader("Cache-Control", "no-cache, no-store, must-revalidate");
