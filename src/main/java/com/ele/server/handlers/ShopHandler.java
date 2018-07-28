@@ -41,12 +41,12 @@ public class ShopHandler extends ApiHandler {
         List<Shop> shoplist = new ArrayList<>();
 
         shoplist.add(Shop.newBuilder()
-                .setImgUrl("http://images.cangdu.org/15cf6c700bb2135.jpg")
+                .setImgUrl("http://localhost:4000/apis/img/tarjan.jpg")
                 .setIsBrand(true)
                 .setShopName("Test 1")
                 .setStarNum(4.6)
                 .setMonthlySales(532)
-                .setStarNum(20)
+                .setStarNum(5.0)
                 .setDeliveryFee(5)
                 .setDistance(1177.2)
                 .setNeedTime("20H5min")

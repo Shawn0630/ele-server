@@ -2,6 +2,7 @@ package com.ele.server;
 
 import akka.actor.ActorSystem;
 import com.ele.server.handlers.HandlerException;
+import com.ele.server.handlers.ImageHandler;
 import com.ele.server.handlers.ShopHandler;
 import com.ele.server.handlers.VarietyHandler;
 import com.google.common.base.Throwables;
@@ -68,6 +69,7 @@ public class ServerVerticle extends AbstractVerticle{
 
         router.mountSubRouter(root + "/shop", new ShopHandler(vertx, system).createSubRouter());
         router.mountSubRouter(root + "/variety", new VarietyHandler(vertx, system).createSubRouter());
+        router.mountSubRouter(root + "/img", new ImageHandler(vertx, system).createSubRouter());
 
         failureHandler(router.route(root + "/*"));
 
