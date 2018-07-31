@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.io.ByteStreams;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
@@ -31,9 +32,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.util.Objects;
 import java.util.UUID;
@@ -277,6 +276,27 @@ public abstract class ApiHandler {
                     return completedFuture(Done.getInstance());
                 }
         ).mapMaterializedValue(futureDone -> futureDone.thenCompose(x -> x));
+    }
+
+    protected void sendFile(RoutingContext context, String file) {
+        HttpServerResponse response = context.response();
+        response.putHeader("Content-Disposition", "attachment; file=\"" + file + "\"");
+        response.putHeader("Content-Type", "application/octet-stream");
+        response.setChunked(true);
+        OutputStream out = new VertxChunkedOutputStream(response);
+        InputStream in = getClass().getClassLoader().getResourceAsStream(file);
+        if (in == null) {
+            LOG.error("Unable to download file");
+            response.setStatusCode(500).setStatusMessage("Unable to download file").end();
+            return;
+        } else {
+            try {
+                ByteStreams.copy(in, out);
+            } catch (IOException e) {
+                LOG.error("Error in sending file", e);
+            }
+            response.end();
+        }
     }
 
 }

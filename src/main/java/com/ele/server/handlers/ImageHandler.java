@@ -36,14 +36,7 @@ public class ImageHandler extends ApiHandler{
             LOG.error("Bad Request from client");
             return;
         }
-        File file = new File(root + "/" + filename);
-        if (file.exists()) {
-            context.response().putHeader("Content-Disposition", "attachment:filename=\" " + filename + "\"");
-            context.response().sendFile(root + "/" + filename);
-        } else {
-            notFound(context);
-            LOG.error("Required Data not Found");
-        }
+        sendFile(context, root + "/" + filename);
     }
 
 
