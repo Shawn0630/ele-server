@@ -1,6 +1,7 @@
 package com.ele.server;
 
 import akka.actor.ActorSystem;
+import com.ele.server.dependency.MasterDependency;
 import com.ele.server.handlers.HandlerException;
 import com.ele.server.handlers.ImageHandler;
 import com.ele.server.handlers.ShopHandler;
@@ -26,11 +27,6 @@ import java.util.Set;
 public class ServerVerticle extends AbstractVerticle{
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
-
-    public static void main(String[] args) {
-        Vertx vertx = Vertx.vertx();
-        vertx.deployVerticle(new ServerVerticle());
-    }
 
     @Override
     public void start(final Future<Void> started) {
