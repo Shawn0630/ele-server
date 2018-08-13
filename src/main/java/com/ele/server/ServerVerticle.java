@@ -1,6 +1,7 @@
 package com.ele.server;
 
 import akka.actor.ActorSystem;
+import com.ele.data.repositories.SystemStorage;
 import com.ele.server.dependency.MasterDependency;
 import com.ele.server.handlers.HandlerException;
 import com.ele.server.handlers.ImageHandler;
@@ -27,6 +28,11 @@ import java.util.Set;
 public class ServerVerticle extends AbstractVerticle{
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
+    private final SystemStorage systemStorage;
+
+    public ServerVerticle(SystemStorage sysStorage) {
+        this.systemStorage = sysStorage;
+    }
 
     @Override
     public void start(final Future<Void> started) {
@@ -63,7 +69,7 @@ public class ServerVerticle extends AbstractVerticle{
             context.next();
         });
 
-        router.mountSubRouter(root + "/shop", new ShopHandler(vertx, system).createSubRouter());
+        router.mountSubRouter(root + "/shop", new ShopHandler(vertx, system, systemStorage.getShopRepository()).createSubRouter());
         router.mountSubRouter(root + "/variety", new VarietyHandler(vertx, system).createSubRouter());
         router.mountSubRouter(root + "/img", new ImageHandler(vertx, system).createSubRouter());
 
