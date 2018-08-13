@@ -1,6 +1,5 @@
 package com.ele.server;
 
-import com.ele.data.repositories.MySQLStorage;
 import com.ele.server.dependency.MasterDependency;
 import com.github.racc.tscg.TypesafeConfigModule;
 import com.google.inject.Guice;
