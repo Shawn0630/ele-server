@@ -3,7 +3,6 @@ package com.ele.server.handlers;
 import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.stream.javadsl.Source;
-import com.ele.data.repositories.MySQLRepository;
 import com.ele.data.repositories.ShopRepository;
 import com.ele.model.dto.ele.Promotion;
 import com.ele.model.dto.ele.PromotionType;
@@ -48,10 +47,6 @@ public class ShopHandler extends ApiHandler {
                 .setNeedtip(true)
                 .setIsNewShop(true)
                 .addShopActivity(Promotion.newBuilder()
-                        .setVariety(PromotionType.NEW)
-                        .setSlogan("New User Deduct $17.0")
-                        .build())
-                .addShopActivity(Promotion.newBuilder()
                         .setVariety(PromotionType.SUBTRACTION)
                         .setSlogan("Deduct $20.0")
                         .build())
@@ -63,14 +58,26 @@ public class ShopHandler extends ApiHandler {
                         .setVariety(PromotionType.DISCOUNT)
                         .setSlogan("50% Off")
                         .build())
+                .addShopActivity(Promotion.newBuilder()
+                        .setVariety(PromotionType.NEW)
+                        .setSlogan("New User Deduct $17.0")
+                        .build())
                 .build()).whenComplete((result, error) -> {
                    if(error != null) {
-                       LOG.error("Error Unable to create a new row", error);
+                       LOG.error("Error creating a new row", error);
                    } else {
-                       LOG.info("Successful create a new row");
+                       LOG.info("Create a new row");
                    }
                 });
 
+        repo.getAll().whenComplete((result, error) -> {
+            if (error != null) {
+                LOG.error("Error getting all rows");
+            } else {
+                LOG.info("Successful get all rows");
+            }
+
+        });
         return subRouter;
     }
 
