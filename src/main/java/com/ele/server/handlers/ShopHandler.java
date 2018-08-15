@@ -31,59 +31,59 @@ public class ShopHandler extends ApiHandler {
         Router subRouter = Router.router(vertx);
 
         subRouter.get("/").handler(this::handleGetShop);
-        repo.create(ShopProfile.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setImgUrl("http://localhost:4000/apis/img/tarjan.jpg")
-                .setIsBrand(true)
-                .setShopName("Test 1")
-                .setStarNum(4.6)
-                .setMonthlySales(532)
-                .setStarNum(5.0)
-                .setDeliveryFee(5)
-                .setDistance(1177.2)
-                .setNeedTime("20H5min")
-                .setIsBird(true)
-                .setIsInsurance(true)
-                .setNeedtip(true)
-                .setIsNewShop(true)
-                .addShopActivity(Promotion.newBuilder()
-                        .setVariety(PromotionType.SUBTRACTION)
-                        .setSlogan("Deduct $20.0")
-                        .build())
-                .addShopActivity(Promotion.newBuilder()
-                        .setVariety(PromotionType.SPECIAL)
-                        .setSlogan("$16.0 Off")
-                        .build())
-                .addShopActivity(Promotion.newBuilder()
-                        .setVariety(PromotionType.DISCOUNT)
-                        .setSlogan("50% Off")
-                        .build())
-                .addShopActivity(Promotion.newBuilder()
-                        .setVariety(PromotionType.NEW)
-                        .setSlogan("New User Deduct $17.0")
-                        .build())
-                .build()).whenComplete((result, error) -> {
-                   if(error != null) {
-                       LOG.error("Error creating a new row", error);
-                   } else {
-                       LOG.info("Create a new row");
-                   }
-                });
+//        repo.create(ShopProfile.newBuilder()
+//                .setId(UUID.randomUUID().toString())
+//                .setImgUrl("http://localhost:4000/apis/img/tarjan.jpg")
+//                .setIsBrand(true)
+//                .setShopName("Test 1")
+//                .setStarNum(4.6)
+//                .setMonthlySales(532)
+//                .setStarNum(5.0)
+//                .setDeliveryFee(5)
+//                .setDistance(1177.2)
+//                .setNeedTime("20H5min")
+//                .setIsBird(true)
+//                .setIsInsurance(true)
+//                .setNeedtip(true)
+//                .setIsNewShop(true)
+//                .addShopActivity(Promotion.newBuilder()
+//                        .setVariety(PromotionType.SUBTRACTION)
+//                        .setSlogan("Deduct $20.0")
+//                        .build())
+//                .addShopActivity(Promotion.newBuilder()
+//                        .setVariety(PromotionType.SPECIAL)
+//                        .setSlogan("$16.0 Off")
+//                        .build())
+//                .addShopActivity(Promotion.newBuilder()
+//                        .setVariety(PromotionType.DISCOUNT)
+//                        .setSlogan("50% Off")
+//                        .build())
+//                .addShopActivity(Promotion.newBuilder()
+//                        .setVariety(PromotionType.NEW)
+//                        .setSlogan("New User Deduct $17.0")
+//                        .build())
+//                .build()).whenComplete((result, error) -> {
+//                   if(error != null) {
+//                       LOG.error("Error creating a new row", error);
+//                   } else {
+//                       LOG.info("Create a new row");
+//                   }
+//                });
 
-        repo.getAll().whenComplete((result, error) -> {
-            if (error != null) {
-                LOG.error("Error getting all rows");
-            } else {
-                LOG.info("Successful get all rows");
-            }
-
-        });
         return subRouter;
     }
 
     private void handleGetShop(RoutingContext context) {
-        Source<ShopProfile, NotUsed> source = Source.from(mockShopList());
-        serializationProcedure(context, source);
+        repo.getAll().whenComplete((result, error) -> {
+            if (error != null) {
+                LOG.error("Error getting all rows");
+            } else {
+                Source<ShopProfile, NotUsed> source = Source.from(result);
+                serializationProcedure(context, source);
+            }
+
+        });
+
     }
 
     private List<ShopProfile> mockShopList() {
