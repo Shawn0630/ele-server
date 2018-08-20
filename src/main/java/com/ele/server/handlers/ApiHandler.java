@@ -13,6 +13,7 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
+import com.ele.model.DataModel;
 import com.ele.server.handlers.helpers.VertxChunkedOutputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -113,6 +114,8 @@ public abstract class ApiHandler {
             try {
                 if (obj instanceof String) {
                     json = (String) obj;
+                } else if (obj instanceof DataModel) {
+                    json = ((DataModel) obj).toJSON();
                 } else if (obj instanceof GeneratedMessageV3) {
                     json = toJson((GeneratedMessageV3) obj);
                 }  else {
@@ -134,7 +137,14 @@ public abstract class ApiHandler {
             Source<T, NotUsed> source
     ) {
         final Materializer materializer = ActorMaterializer.create(system);
-        return source.runWith(toProtoSink("", context.response()), materializer);
+        for (String accept : context.request().headers().getAll("Accept")) {
+            if (accept.contains("protobuf")) {
+                return source.runWith(toProtoSink("", context.response()), materializer);
+            } else if (accept.contains("json")) {
+                return source.runWith(toJsonSink("", context.response()), materializer);
+            }
+        }
+        return source.runWith(toJsonSink("", context.response()), materializer);
     }
 
     /**
