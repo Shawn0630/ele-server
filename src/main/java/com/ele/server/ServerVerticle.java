@@ -2,6 +2,7 @@ package com.ele.server;
 
 import akka.actor.ActorSystem;
 import com.ele.data.repositories.SystemStorage;
+import com.ele.server.config.SystemConfig;
 import com.ele.server.dependency.MasterDependency;
 import com.ele.server.handlers.HandlerException;
 import com.ele.server.handlers.ImageHandler;
@@ -9,6 +10,8 @@ import com.ele.server.handlers.ShopHandler;
 import com.ele.server.handlers.VarietyHandler;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -28,19 +31,24 @@ import java.util.Set;
 public class ServerVerticle extends AbstractVerticle{
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerVerticle.class);
-    private final SystemStorage systemStorage;
+    private final SystemConfig sysConfig;
+    private final Injector injector;
+    private final Vertx vertx;
 
-    public ServerVerticle(SystemStorage sysStorage) {
-        this.systemStorage = sysStorage;
+    @Inject
+    public ServerVerticle(final Vertx vertx, final Injector injector, final SystemConfig config) {
+        this.vertx = vertx;
+        this.injector = injector;
+        this.sysConfig = config;
     }
 
     @Override
     public void start(final Future<Void> started) {
         Router router = Router.router(vertx);
-        boolean allowCors = true;
+        boolean allowCors = sysConfig.getAllowCore();
         ActorSystem system = ActorSystem.apply("main");
-
-        String root = "/apis";
+        String root = sysConfig.getApiRoot();
+        int port = sysConfig.getServerHttpPort();
 
 
 
@@ -69,16 +77,16 @@ public class ServerVerticle extends AbstractVerticle{
             context.next();
         });
 
-        router.mountSubRouter(root + "/shop", new ShopHandler(vertx, system, systemStorage.getShopRepository()).createSubRouter());
+        router.mountSubRouter(root + "/shop", injector.getInstance(ShopHandler.class).createSubRouter());
         router.mountSubRouter(root + "/variety", new VarietyHandler(vertx, system).createSubRouter());
         router.mountSubRouter(root + "/img", new ImageHandler(vertx, system).createSubRouter());
 
         failureHandler(router.route(root + "/*"));
 
-        vertx.createHttpServer().requestHandler(router::accept).listen(4000, result -> {
+        vertx.createHttpServer().requestHandler(router::accept).listen(port, result -> {
             if (result.succeeded()) {
                 started.complete();
-                LOG.info("Server started successfully at port " + 4000);
+                LOG.info("Server started successfully at port " + port);
             } else {
                 started.fail(result.cause());
                 LOG.info("Server failed to start", result.cause());

@@ -1,6 +1,7 @@
 package com.ele.server.handlers;
 
 import akka.actor.ActorSystem;
+import com.google.inject.Inject;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -15,6 +16,8 @@ public class ImageHandler extends ApiHandler{
 
     private static final Logger LOG = LoggerFactory.getLogger(ImageHandler.class);
     private static final String root = "img";
+
+    @Inject
     public ImageHandler(Vertx vertx, ActorSystem system) {
         super(vertx, system);
     }

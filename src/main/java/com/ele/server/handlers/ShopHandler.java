@@ -4,9 +4,11 @@ import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.stream.javadsl.Source;
 import com.ele.data.repositories.ShopRepository;
+import com.ele.data.repositories.SystemStorage;
 import com.ele.model.dto.ele.Promotion;
 import com.ele.model.dto.ele.PromotionType;
 import com.ele.model.dto.ele.ShopProfile;
+import com.google.inject.Inject;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -21,9 +23,10 @@ public class ShopHandler extends ApiHandler {
     private static final Logger LOG = LoggerFactory.getLogger(ShopHandler.class);
     private final ShopRepository repo;
 
-    public ShopHandler(Vertx vertx, ActorSystem system, ShopRepository shopRepo) {
+    @Inject
+    public ShopHandler(Vertx vertx, ActorSystem system, SystemStorage systemStorage) {
         super(vertx, system);
-        this.repo = shopRepo;
+        this.repo = systemStorage.getShopRepository();
     }
 
     @Override
