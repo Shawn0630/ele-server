@@ -13,7 +13,6 @@ public class MasterDependency extends AbstractModule {
 
     public MasterDependency(Config config) {
         this.config = config;
-
     }
 
     @Override
