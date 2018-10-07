@@ -8,6 +8,7 @@ import com.ele.data.repositories.SystemStorage;
 import com.ele.model.dto.ele.Promotion;
 import com.ele.model.dto.ele.PromotionType;
 import com.ele.model.dto.ele.ShopProfile;
+import com.ele.server.config.SystemConfig;
 import com.google.inject.Inject;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;

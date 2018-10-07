@@ -294,19 +294,15 @@ public abstract class ApiHandler {
         response.putHeader("Content-Type", "application/octet-stream");
         response.setChunked(true);
         OutputStream out = new VertxChunkedOutputStream(response);
-        InputStream in = getClass().getClassLoader().getResourceAsStream(file);
-        if (in == null) {
+        try {
+            InputStream in = new FileInputStream((new File(file)));
+            ByteStreams.copy(in, out);
+        } catch(IOException e) {
             LOG.error("Unable to download file");
             response.setStatusCode(500).setStatusMessage("Unable to download file").end();
             return;
-        } else {
-            try {
-                ByteStreams.copy(in, out);
-            } catch (IOException e) {
-                LOG.error("Error in sending file", e);
-            }
-            response.end();
         }
+        response.end();
     }
 
 }

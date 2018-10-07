@@ -10,6 +10,7 @@ public class SystemConfig {
     private final String apiRoot;
     private final boolean allowCore;
     private final String clusterName;
+    private final String uploadsDir;
 
     @Inject
     public SystemConfig (
@@ -17,7 +18,8 @@ public class SystemConfig {
             @TypesafeConfig("ele.server.serverInstances") int serverInstances,
             @TypesafeConfig("ele.api.root") String apiRoot,
             @TypesafeConfig("ele.api.allow-core") boolean allowCore,
-            @TypesafeConfig("ele.server.cluster.name") String clusterName
+            @TypesafeConfig("ele.server.cluster.name") String clusterName,
+            @TypesafeConfig("ele.server.cluster.uploadsDir") String uploadsDir
     ) {
 
         this.serverHttpPort = serverHttpPort;
@@ -25,6 +27,7 @@ public class SystemConfig {
         this.apiRoot = apiRoot;
         this.allowCore = allowCore;
         this.clusterName = clusterName;
+        this.uploadsDir = uploadsDir;
     }
 
     public String getApiRoot() {
@@ -43,6 +46,10 @@ public class SystemConfig {
 
     public String getClusterName() {
         return this.clusterName;
+    }
+
+    public String getUploadsDir() {
+        return this.uploadsDir;
     }
 
 }

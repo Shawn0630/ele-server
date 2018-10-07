@@ -4,8 +4,8 @@ import akka.actor.ActorSystem;
 import com.ele.data.repositories.SystemStorage;
 import com.ele.server.config.SystemConfig;
 import com.ele.server.dependency.MasterDependency;
+import com.ele.server.handlers.FileHandler;
 import com.ele.server.handlers.HandlerException;
-import com.ele.server.handlers.ImageHandler;
 import com.ele.server.handlers.ShopHandler;
 import com.ele.server.handlers.VarietyHandler;
 import com.google.common.base.Throwables;
@@ -52,7 +52,7 @@ public class ServerVerticle extends AbstractVerticle{
 
 
 
-        router.route().handler(BodyHandler.create());
+        //router.route().handler(BodyHandler.create());
 
         if (allowCors) {
             Set<HttpMethod> allowedMethods = new HashSet<>(Arrays.asList(
@@ -78,8 +78,8 @@ public class ServerVerticle extends AbstractVerticle{
         });
 
         router.mountSubRouter(root + "/shop", injector.getInstance(ShopHandler.class).createSubRouter());
-        router.mountSubRouter(root + "/variety", new VarietyHandler(vertx, system).createSubRouter());
-        router.mountSubRouter(root + "/img", new ImageHandler(vertx, system).createSubRouter());
+        router.mountSubRouter(root + "/variety", injector.getInstance(VarietyHandler.class).createSubRouter());
+        router.mountSubRouter(root + "/img", injector.getInstance(FileHandler.class).createSubRouter());
 
         failureHandler(router.route(root + "/*"));
 

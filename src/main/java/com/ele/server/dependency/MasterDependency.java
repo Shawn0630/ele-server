@@ -3,6 +3,7 @@ package com.ele.server.dependency;
 import akka.actor.ActorSystem;
 import com.ele.data.repositories.MySQLStorage;
 import com.ele.data.repositories.SystemStorage;
+import com.ele.server.config.SystemConfig;
 import com.google.inject.AbstractModule;
 import com.typesafe.config.Config;
 
