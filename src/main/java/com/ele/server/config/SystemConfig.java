@@ -11,6 +11,7 @@ public class SystemConfig {
     private final boolean allowCore;
     private final String clusterName;
     private final String uploadsDir;
+    private final boolean isWebIntegration;
 
     @Inject
     public SystemConfig (
@@ -19,7 +20,8 @@ public class SystemConfig {
             @TypesafeConfig("ele.api.root") String apiRoot,
             @TypesafeConfig("ele.api.allow-core") boolean allowCore,
             @TypesafeConfig("ele.server.cluster.name") String clusterName,
-            @TypesafeConfig("ele.server.cluster.uploadsDir") String uploadsDir
+            @TypesafeConfig("ele.server.cluster.uploadsDir") String uploadsDir,
+            @TypesafeConfig("ele.server.web-integration") boolean isWebIntegration
     ) {
 
         this.serverHttpPort = serverHttpPort;
@@ -28,6 +30,7 @@ public class SystemConfig {
         this.allowCore = allowCore;
         this.clusterName = clusterName;
         this.uploadsDir = uploadsDir;
+        this.isWebIntegration = isWebIntegration;
     }
 
     public String getApiRoot() {
@@ -50,6 +53,10 @@ public class SystemConfig {
 
     public String getUploadsDir() {
         return this.uploadsDir;
+    }
+
+    public boolean isWebIntegration() {
+        return this.isWebIntegration;
     }
 
 }

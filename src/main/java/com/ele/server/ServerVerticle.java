@@ -23,6 +23,7 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -82,6 +83,21 @@ public class ServerVerticle extends AbstractVerticle{
         router.mountSubRouter(root + "/img", injector.getInstance(FileHandler.class).createSubRouter());
 
         failureHandler(router.route(root + "/*"));
+
+        if (sysConfig.isWebIntegration()) {
+            LOG.info("Serving web content from Vertx");
+            StaticHandler webHanlder = StaticHandler.create()
+                    .setWebRoot("web")
+                    .setIndexPage("index.html")
+                    .setCachingEnabled(true)
+                    .setCacheEntryTimeout(604800000)
+                    .setDefaultContentEncoding("UTF-8")
+                    .setFilesReadOnly(true);
+            router.route("/*").handler(webHanlder);
+            router.get().pathRegex("^(?!(" + root + ".*|bundle.js|bundle.css)$).*").handler(context ->
+                    context.reroute("/index.html")
+            );
+        }
 
         vertx.createHttpServer().requestHandler(router::accept).listen(port, result -> {
             if (result.succeeded()) {
