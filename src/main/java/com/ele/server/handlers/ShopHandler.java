@@ -3,12 +3,11 @@ package com.ele.server.handlers;
 import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.stream.javadsl.Source;
-import com.ele.data.repositories.ShopRepository;
 import com.ele.data.repositories.SystemStorage;
+import com.ele.data.repositories.mysql.ShopRepository;
 import com.ele.model.dto.ele.Promotion;
 import com.ele.model.dto.ele.PromotionType;
 import com.ele.model.dto.ele.ShopProfile;
-import com.ele.server.config.SystemConfig;
 import com.google.inject.Inject;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -18,7 +17,6 @@ import io.vertx.ext.web.RoutingContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class ShopHandler extends ApiHandler {
     private static final Logger LOG = LoggerFactory.getLogger(ShopHandler.class);

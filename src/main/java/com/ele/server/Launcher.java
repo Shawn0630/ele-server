@@ -1,7 +1,5 @@
 package com.ele.server;
 
-import com.ele.data.repositories.MySQLStorage;
-import com.ele.data.repositories.SystemStorage;
 import com.ele.server.config.SystemConfig;
 import com.ele.server.dependency.GuiceVerticleFactory;
 import com.ele.server.dependency.GuiceVertxDeploymentManager;

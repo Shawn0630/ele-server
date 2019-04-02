@@ -4,10 +4,7 @@ import akka.actor.ActorSystem;
 import com.ele.data.repositories.SystemStorage;
 import com.ele.server.config.SystemConfig;
 import com.ele.server.dependency.MasterDependency;
-import com.ele.server.handlers.FileHandler;
-import com.ele.server.handlers.HandlerException;
-import com.ele.server.handlers.ShopHandler;
-import com.ele.server.handlers.VarietyHandler;
+import com.ele.server.handlers.*;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -81,6 +78,7 @@ public class ServerVerticle extends AbstractVerticle{
         router.mountSubRouter(root + "/shop", injector.getInstance(ShopHandler.class).createSubRouter());
         router.mountSubRouter(root + "/variety", injector.getInstance(VarietyHandler.class).createSubRouter());
         router.mountSubRouter(root + "/img", injector.getInstance(FileHandler.class).createSubRouter());
+        router.mountSubRouter(root + "/mock", injector.getInstance(MockHandler.class).createSubRouter());
 
         failureHandler(router.route(root + "/*"));
 
