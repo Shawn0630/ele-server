@@ -1,11 +1,8 @@
 package com.ele.server.handlers;
 
-import akka.NotUsed;
 import akka.actor.ActorSystem;
-import akka.stream.javadsl.Source;
 import com.ele.data.repositories.MockStorage;
 import com.ele.data.repositories.file.ResultRepository;
-import com.example.dto.ScanDenovoCandidate;
 import com.google.inject.Inject;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -13,7 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 public class MockHandler extends ApiHandler {
 
@@ -37,14 +34,13 @@ public class MockHandler extends ApiHandler {
 
 
     private void handleGetDenovoResult(RoutingContext context) {
-        Source<ScanDenovoCandidate, NotUsed> denovo;
-        try {
-           denovo = repo.denovo();
-        } catch (IOException e) {
-            notFound(context);
-            return;
-        }
-        serializationProcedure(context, denovo);
+        CompletableFuture.completedFuture(repo.denovo()).whenComplete((result, error) -> {
+            if (error != null) {
+                context.fail(error);
+            } else {
+                serializationProcedure(context, result);
+            }
+        });
 
     }
 
